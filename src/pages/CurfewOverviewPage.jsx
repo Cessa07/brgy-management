@@ -5,6 +5,40 @@ import DashboardLayout from '../layout/DashboardLayout'
 const DEFAULT_OVERVIEW =
   "The present case arises from the alleged violation of the city/state-imposed curfew, intended to maintain public safety and order. The petitioner contends that the respondent breached the curfew restrictions, thereby potentially endangering community welfare. The matter requires judicial consideration to determine whether the respondent's actions constitute a lawful exception or a contravention of the established curfew regulations."
 
+// Success Alert Component with theme colors
+const SuccessAlert = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-[#1a3a8a] to-[#1b9ad4] px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-white">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-white/80 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function ensureHtml(text) {
   if (!text || typeof text !== 'string') return '<p></p>'
   if (text.trim().startsWith('<')) return text
@@ -28,6 +62,9 @@ function CurfewOverviewPage() {
   const [editedDate, setEditedDate] = useState('2026-10-30')
 
   const [formatActive, setFormatActive] = useState({ bold: false, italic: false, underline: false })
+  
+  // Success alert state
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
 
   const editorRef = useRef(null)
   const fileInputLinkRef = useRef(null)
@@ -41,6 +78,8 @@ function CurfewOverviewPage() {
     setOverview(draftOverview) // commit draft
     setEditedDate(editDate)
     setIsEditing(false)
+    // Show success alert
+    setShowSuccessAlert(true)
   }
 
   const handleCancel = () => {
@@ -157,6 +196,32 @@ function CurfewOverviewPage() {
 
   return (
     <DashboardLayout active="/curfew-logs">
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
+
+      {/* Success Alert with theme colors */}
+      {showSuccessAlert && (
+        <SuccessAlert 
+          message="Case overview saved successfully!" 
+          onClose={() => setShowSuccessAlert(false)}
+        />
+      )}
+
       <div className="min-h-full bg-gray-100 pt-1">
         <section className="overflow-hidden rounded-2xl bg-white shadow-lg">
           

@@ -1,7 +1,41 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layout/DashboardLayout'
 import ModalCard from '../components/ModalCard'
+
+// Success Alert Component with blue theme
+const SuccessAlert = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-[#1a3a8a] to-[#1b9ad4] px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-white">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-white/80 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 function getDefaultDate() {
   const d = new Date()
@@ -18,17 +52,17 @@ function getDefaultTime() {
 }
 
 const initialCurfewRows = [
-  { id: '01', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '02', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '03', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '04', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '05', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '06', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '07', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '08', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '09', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '10', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
-  { id: '11', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12yrs old', status: null },
+  { id: '01', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '02', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '03', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '04', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '05', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '06', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '07', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '08', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '09', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '10', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
+  { id: '11', name: 'Reyes, Timothy G.', address: '166 , BARANGAY CALOOCAN CITY', age: '12', status: null },
 ]
 
 function CurfewLogsPage() {
@@ -36,6 +70,9 @@ function CurfewLogsPage() {
   const [rows, setRows] = useState(initialCurfewRows)
   const [showAddModal, setShowAddModal] = useState(false)
   const [statusMenuOpen, setStatusMenuOpen] = useState(null)
+  // Success alert state
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
+  const [newCurfewName, setNewCurfewName] = useState('')
   const [form, setForm] = useState({
     date: '',
     time: '',
@@ -78,18 +115,6 @@ function CurfewLogsPage() {
       age: '',
     }
     let isValid = true
-
-    // Validate date
-    if (!form.date.trim()) {
-      newErrors.date = 'Date is required'
-      isValid = false
-    }
-
-    // Validate time
-    if (!form.time.trim()) {
-      newErrors.time = 'Time is required'
-      isValid = false
-    }
 
     // Validate name
     if (!form.name.trim()) {
@@ -134,19 +159,21 @@ function CurfewLogsPage() {
     }
 
     const nextId = String(rows.length + 1).padStart(2, '0')
-    setRows([
-      ...rows,
-      {
-        id: nextId,
-        name: form.name,
-        address: form.address,
-        age: `${form.age}yrs old`,
-        status: null,
-      },
-    ])
+    const newRow = {
+      id: nextId,
+      name: form.name,
+      address: form.address,
+      age: form.age,
+      status: null,
+    }
+    
+    setRows([...rows, newRow])
+    setNewCurfewName(form.name)
     setForm({ date: '', time: '', name: '', address: '', age: '' })
     setErrors({ date: '', time: '', name: '', address: '', age: '' })
     setShowAddModal(false)
+    // Show success alert
+    setShowSuccessAlert(true)
   }
 
   const setRowStatus = (rowId, newStatus) => {
@@ -156,6 +183,32 @@ function CurfewLogsPage() {
 
   return (
     <DashboardLayout active="curfew">
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
+
+      {/* Success Alert with blue theme */}
+      {showSuccessAlert && (
+        <SuccessAlert 
+          message={`Curfew record for ${newCurfewName} has been created successfully`}
+          onClose={() => setShowSuccessAlert(false)}
+        />
+      )}
+
       <div className="min-h-full bg-gray-100 pt-1">
         <section className="overflow-hidden rounded-xl bg-white shadow-lg">
           {/* Header: gradient blue bar + Add Curfew right-aligned */}
@@ -393,9 +446,10 @@ function CurfewLogsPage() {
               <span className="text-xs font-semibold text-slate-700">Date</span>
                 <input
                   type="date"
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-600"
+                  className="rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm outline-none cursor-not-allowed"
                   value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  readOnly
+                  disabled
                 />
               {errors.date && <span className="text-xs text-red-600">{errors.date}</span>}
             </label>
@@ -405,167 +459,12 @@ function CurfewLogsPage() {
               <div className="relative">
                 <input
                   type="text"
-                  className={`w-full rounded-md border ${errors.time ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-50'} px-3 py-2.5 pr-10 text-sm text-slate-700 outline-none focus:border-[#1976D2] focus:bg-white`}
+                  className="w-full rounded-md border border-slate-300 bg-gray-100 px-3 py-2.5 text-sm text-slate-700 outline-none cursor-not-allowed"
                   value={form.time}
-                  onChange={(e) => setForm({ ...form, time: e.target.value })}
+                  readOnly
+                  disabled
                   placeholder="12:00 AM"
                 />
-                <span 
-                  className="absolute inset-y-0 right-2.5 flex cursor-pointer items-center text-slate-400 hover:text-slate-600"
-                  onClick={() => {
-                    // Create modal backdrop
-                    const modalOverlay = document.createElement('div');
-                    modalOverlay.style.position = 'fixed';
-                    modalOverlay.style.top = '0';
-                    modalOverlay.style.left = '0';
-                    modalOverlay.style.width = '100%';
-                    modalOverlay.style.height = '100%';
-                    modalOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                    modalOverlay.style.display = 'flex';
-                    modalOverlay.style.alignItems = 'center';
-                    modalOverlay.style.justifyContent = 'center';
-                    modalOverlay.style.zIndex = '9999';
-                    
-                    // Create time picker container
-                    const pickerContainer = document.createElement('div');
-                    pickerContainer.style.backgroundColor = 'white';
-                    pickerContainer.style.borderRadius = '0.75rem';
-                    pickerContainer.style.padding = '1.5rem';
-                    pickerContainer.style.boxShadow = '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)';
-                    pickerContainer.style.width = '280px';
-                    pickerContainer.style.maxWidth = '90%';
-                    
-                    // Create title
-                    const title = document.createElement('h3');
-                    title.textContent = 'Select Time';
-                    title.style.fontSize = '1.125rem';
-                    title.style.fontWeight = '600';
-                    title.style.marginBottom = '1rem';
-                    title.style.color = '#1e293b';
-                    
-                    // Create time input wrapper
-                    const timeWrapper = document.createElement('div');
-                    timeWrapper.style.marginBottom = '1.5rem';
-                    
-                    // Create time input
-                    const timeInput = document.createElement('input');
-                    timeInput.type = 'time';
-                    timeInput.style.width = '100%';
-                    timeInput.style.padding = '0.75rem';
-                    timeInput.style.border = '1px solid #cbd5e1';
-                    timeInput.style.borderRadius = '0.5rem';
-                    timeInput.style.fontSize = '1rem';
-                    timeInput.style.outline = 'none';
-                    timeInput.style.backgroundColor = '#f8fafc';
-                    
-                    // Style the time input's internal picker
-                    timeInput.style.colorScheme = 'light';
-                    
-                    // Focus styles
-                    timeInput.addEventListener('focus', () => {
-                      timeInput.style.borderColor = '#1976D2';
-                      timeInput.style.backgroundColor = 'white';
-                    });
-                    
-                    timeInput.addEventListener('blur', () => {
-                      timeInput.style.borderColor = '#cbd5e1';
-                      timeInput.style.backgroundColor = '#f8fafc';
-                    });
-                    
-                    // Create buttons container
-                    const buttonsContainer = document.createElement('div');
-                    buttonsContainer.style.display = 'flex';
-                    buttonsContainer.style.gap = '0.75rem';
-                    buttonsContainer.style.justifyContent = 'flex-end';
-                    
-                    // Create Cancel button
-                    const cancelBtn = document.createElement('button');
-                    cancelBtn.textContent = 'Cancel';
-                    cancelBtn.style.padding = '0.5rem 1rem';
-                    cancelBtn.style.borderRadius = '0.375rem';
-                    cancelBtn.style.fontSize = '0.875rem';
-                    cancelBtn.style.fontWeight = '500';
-                    cancelBtn.style.backgroundColor = '#f1f5f9';
-                    cancelBtn.style.color = '#475569';
-                    cancelBtn.style.border = 'none';
-                    cancelBtn.style.cursor = 'pointer';
-                    cancelBtn.style.transition = 'background-color 0.2s';
-                    
-                    cancelBtn.addEventListener('mouseenter', () => {
-                      cancelBtn.style.backgroundColor = '#e2e8f0';
-                    });
-                    
-                    cancelBtn.addEventListener('mouseleave', () => {
-                      cancelBtn.style.backgroundColor = '#f1f5f9';
-                    });
-                    
-                    // Create OK button
-                    const okBtn = document.createElement('button');
-                    okBtn.textContent = 'OK';
-                    okBtn.style.padding = '0.5rem 1rem';
-                    okBtn.style.borderRadius = '0.375rem';
-                    okBtn.style.fontSize = '0.875rem';
-                    okBtn.style.fontWeight = '500';
-                    okBtn.style.backgroundColor = '#1976D2';
-                    okBtn.style.color = 'white';
-                    okBtn.style.border = 'none';
-                    okBtn.style.cursor = 'pointer';
-                    okBtn.style.transition = 'background-color 0.2s';
-                    
-                    okBtn.addEventListener('mouseenter', () => {
-                      okBtn.style.backgroundColor = '#1565C0';
-                    });
-                    
-                    okBtn.addEventListener('mouseleave', () => {
-                      okBtn.style.backgroundColor = '#1976D2';
-                    });
-                    
-                    // Handle OK button click
-                    okBtn.addEventListener('click', () => {
-                      const time24 = timeInput.value;
-                      if (time24) {
-                        const [hours, minutes] = time24.split(':');
-                        const hour = parseInt(hours, 10);
-                        const ampm = hour >= 12 ? 'PM' : 'AM';
-                        const hour12 = hour % 12 || 12;
-                        const formattedTime = `${hour12}:${minutes} ${ampm}`;
-                        setForm({ ...form, time: formattedTime });
-                      }
-                      document.body.removeChild(modalOverlay);
-                    });
-                    
-                    // Handle Cancel button click
-                    cancelBtn.addEventListener('click', () => {
-                      document.body.removeChild(modalOverlay);
-                    });
-                    
-                    // Close on backdrop click
-                    modalOverlay.addEventListener('click', (e) => {
-                      if (e.target === modalOverlay) {
-                        document.body.removeChild(modalOverlay);
-                      }
-                    });
-                    
-                    // Assemble the picker
-                    timeWrapper.appendChild(timeInput);
-                    buttonsContainer.appendChild(cancelBtn);
-                    buttonsContainer.appendChild(okBtn);
-                    
-                    pickerContainer.appendChild(title);
-                    pickerContainer.appendChild(timeWrapper);
-                    pickerContainer.appendChild(buttonsContainer);
-                    
-                    modalOverlay.appendChild(pickerContainer);
-                    document.body.appendChild(modalOverlay);
-                    
-                    // Automatically show the time picker
-                    setTimeout(() => timeInput.showPicker(), 100);
-                  }}
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </span>
               </div>
               {errors.time && <span className="text-xs text-red-600">{errors.time}</span>}
             </label>

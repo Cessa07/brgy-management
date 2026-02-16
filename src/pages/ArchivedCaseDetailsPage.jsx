@@ -26,7 +26,7 @@ function ArchivedCaseDetailsPage() {
             {/* Case Summary */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Case Summary
+                Case Summary
               </h3>
               <div className="mb-4 flex flex-wrap gap-2">
                 <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-semibold uppercase text-gray-800">
@@ -67,7 +67,7 @@ function ArchivedCaseDetailsPage() {
             {/* Case Details */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Case Details
+                Case Details
               </h3>
               <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
                 <div>
@@ -98,7 +98,7 @@ function ArchivedCaseDetailsPage() {
             {/* Resolution Summary */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Resolution Summary
+                Resolution Summary
               </h3>
               <div className="mb-4">
                 <p className="text-xs font-medium text-gray-500">Settlement Status</p>
@@ -117,7 +117,7 @@ function ArchivedCaseDetailsPage() {
             {/* Attached Documents */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Attached Documents
+                Attached Documents
               </h3>
               <ul className="space-y-3">
                 {ATTACHED_DOCS.map((doc, i) => (
@@ -145,7 +145,7 @@ function ArchivedCaseDetailsPage() {
             {/* Archived Information */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Archived Information
+                Archived Information
               </h3>
               <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
                 <div>

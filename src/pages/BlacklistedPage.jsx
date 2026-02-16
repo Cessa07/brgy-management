@@ -1,7 +1,75 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layout/DashboardLayout'
 import ModalCard from '../components/ModalCard'
+
+// Success Alert Component with blue theme for add
+const AddSuccessAlert = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-[#1a3a8a] to-[#1b9ad4] px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-white">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-white/80 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Success Alert Component with red theme for removal
+const RemoveSuccessAlert = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-white">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-white/80 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const initialBlacklistRows = [
   { id: '01', household: 'HN4820450670', name: 'Reyes, Timothy G.', reason: 'Repeated Case Violation' },
@@ -20,6 +88,11 @@ function BlacklistedPage() {
     name: '',
     household: '',
   })
+  // Success alert states
+  const [showAddSuccessAlert, setShowAddSuccessAlert] = useState(false)
+  const [showRemoveSuccessAlert, setShowRemoveSuccessAlert] = useState(false)
+  const [addedName, setAddedName] = useState('')
+  const [removedName, setRemovedName] = useState('')
 
   const openModal = (row, action) => {
     setSelected(row)
@@ -45,14 +118,20 @@ function BlacklistedPage() {
         reason: 'Repeated Case Violation',
       },
     ])
+    setAddedName(form.name)
     setForm({ name: '', household: '' })
     setShowAddModal(false)
+    // Show add success alert
+    setShowAddSuccessAlert(true)
   }
 
   const handleRemove = () => {
     if (!selected) return
+    setRemovedName(selected.name)
     setRows(rows.filter((r) => r.id !== selected.id))
     closeModal()
+    // Show remove success alert
+    setShowRemoveSuccessAlert(true)
   }
 
   // Filter rows based on search input
@@ -66,6 +145,40 @@ function BlacklistedPage() {
 
   return (
     <DashboardLayout active="blacklisted">
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
+
+      {/* Add Success Alert with blue theme */}
+      {showAddSuccessAlert && (
+        <AddSuccessAlert 
+          message={`${addedName} has been added to blacklist successfully`}
+          onClose={() => setShowAddSuccessAlert(false)}
+        />
+      )}
+
+      {/* Remove Success Alert with red theme */}
+      {showRemoveSuccessAlert && (
+        <RemoveSuccessAlert 
+          message={`${removedName} has been removed from blacklist`}
+          onClose={() => setShowRemoveSuccessAlert(false)}
+        />
+      )}
+
       <div className="min-h-full bg-gray-100 pt-1">
         <section className="overflow-hidden rounded-2xl bg-white shadow-lg">
           {/* Blue header: solid dark blue, left-aligned */}
@@ -205,7 +318,7 @@ function BlacklistedPage() {
           <ModalCard
             title="Add Blacklisted Resident"
             onClose={() => setShowAddModal(false)}
-            headerClass="bg-blue-600"
+            headerClass="bg-[#2552c4] "
             darkHeader
           >
             <form onSubmit={handleAddSubmit} className="space-y-4 text-sm">

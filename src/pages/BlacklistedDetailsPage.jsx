@@ -41,7 +41,7 @@ function BlacklistedDetailsPage() {
             {/* Resident Information card */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Resident Information
+                Resident Information
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -62,7 +62,7 @@ function BlacklistedDetailsPage() {
             {/* Blacklist Information card */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Blacklist Information
+                Blacklist Information
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -93,7 +93,7 @@ function BlacklistedDetailsPage() {
             {/* Case Timeline card */}
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-4 border-l-4 border-blue-700 pl-3 text-base font-bold text-gray-800">
-                | Case Timeline
+                Case Timeline
               </h3>
               <div className="relative flex flex-col gap-4 pl-6">
                 <div className="absolute left-[5px] top-2 bottom-2 w-0.5 bg-blue-600" />

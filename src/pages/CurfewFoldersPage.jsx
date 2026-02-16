@@ -1,6 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layout/DashboardLayout'
+import ModalCard from '../components/ModalCard'
+
+// Helper functions for default date and time
+function getDefaultDate() {
+  const d = new Date()
+  return d.toISOString().slice(0, 10)
+}
+
+function getDefaultTime() {
+  const d = new Date()
+  const h = d.getHours()
+  const m = d.getMinutes()
+  const am = h < 12
+  const h12 = h % 12 || 12
+  return `${h12.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${am ? 'AM' : 'PM'}`
+}
 
 const MOCK_FOLDERS = [
   { id: '1', name: 'CURFEW 1' },
@@ -10,6 +26,40 @@ const MOCK_FOLDERS = [
   { id: '5', name: 'CURFEW 5' },
 ]
 
+// Success Alert Component with theme colors
+const SuccessAlert = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-[#1a3a8a] to-[#1b9ad4] px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-white">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-white/80 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function CurfewFoldersPage() {
   const { curfewNo } = useParams()
   const location = useLocation()
@@ -18,6 +68,7 @@ function CurfewFoldersPage() {
   const [folders, setFolders] = useState(MOCK_FOLDERS)
   const [menuOpen, setMenuOpen] = useState(null)
   const [showNotesModal, setShowNotesModal] = useState(false)
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [notesData, setNotesData] = useState({
     date: '',
     time: '',
@@ -36,6 +87,13 @@ function CurfewFoldersPage() {
   }
 
   const handleAddNotes = () => {
+    // Set default date and time when opening the modal
+    setNotesData({
+      date: getDefaultDate(),
+      time: getDefaultTime(),
+      notes: ''
+    })
+    setErrors({})
     setShowNotesModal(true)
   }
 
@@ -63,8 +121,8 @@ function CurfewFoldersPage() {
     // Here you would typically save the notes to your backend
     console.log('Saving notes:', notesData)
     
-    // Show success message (you can replace with a toast notification)
-    alert('Curfew notes added successfully!')
+    // Show success alert
+    setShowSuccessAlert(true)
     
     // Close modal and reset form
     handleCloseModal()
@@ -193,6 +251,32 @@ function CurfewFoldersPage() {
 
   return (
     <DashboardLayout active="/curfew-logs">
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
+
+      {/* Success Alert with theme colors */}
+      {showSuccessAlert && (
+        <SuccessAlert 
+          message="Curfew notes added successfully!" 
+          onClose={() => setShowSuccessAlert(false)}
+        />
+      )}
+
       <div className="min-h-full">
         <section className="overflow-hidden rounded-xl">
           {/* Info bar: CURFEW NO., RESIDENT NAME (left) | Add Curfew Notes (right) */}
@@ -215,81 +299,86 @@ function CurfewFoldersPage() {
             </button>
           </div>
 
-          {/* Add Notes Modal */}
+          {/* Add Notes Modal - Using ModalCard component like in CurfewLogsPage */}
           {showNotesModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm transition-opacity">
-  <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-    <h2 className="mb-4 text-lg font-semibold text-slate-800">Add Curfew Notes</h2>
-    
-    <div className="space-y-4">
-      {/* Date Field - Fixed: Added container div and consistent padding */}
-      <div>
-        <label className="mb-1.5 block text-xs font-semibold text-slate-700">Date</label>
-        <input
-          id="notes-date"
-          type="date"
-          className="w-full rounded-md border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600"
-          value={notesData.date}
-          onChange={(e) => setNotesData({ ...notesData, date: e.target.value })}
-        />
-      </div>
+            <ModalCard
+              title="ADD CURFEW NOTES"
+              onClose={handleCloseModal}
+              widthClass="max-w-lg"
+              headerClass="bg-[#2552c4] text-left text-white"
+              darkHeader
+              headerIcon={
+                <img src="/src/assets/curfew.svg" alt="" className="h-8 w-8 flex-shrink-0" />
+              }
+            >
+              <form onSubmit={(e) => { e.preventDefault(); handleSubmitNotes(); }} className="space-y-5 p-1">
+                <div className="grid grid-cols-2 gap-4">
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-slate-700">Date</span>
+                    <input
+                      id="notes-date"
+                      type="date"
+                      className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-600"
+                      value={notesData.date}
+                      onChange={(e) => setNotesData({ ...notesData, date: e.target.value })}
+                    />
+                    {errors.date && <span className="text-xs text-red-600">{errors.date}</span>}
+                  </label>
+                  
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-slate-700">Time</span>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className={`w-full rounded-md border ${errors.time ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-50'} px-3 py-2.5 pr-10 text-sm text-slate-700 outline-none focus:border-[#1976D2] focus:bg-white`}
+                        value={notesData.time}
+                        onChange={(e) => setNotesData({ ...notesData, time: e.target.value })}
+                        placeholder="12:00 AM"
+                      />
+                      <span 
+                        className="absolute inset-y-0 right-3 flex cursor-pointer items-center text-slate-400 hover:text-slate-600"
+                        onClick={triggerTimePicker}
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                    </div>
+                    {errors.time && <span className="text-xs text-red-600">{errors.time}</span>}
+                  </label>
+                </div>
 
-      {/* Time Field - Fixed: Consistent py-2.5 */}
-      <div>
-        <label className="mb-1.5 block text-xs font-semibold text-slate-700">Time</label>
-        <div className="relative">
-          <input
-            type="text"
-            className={`w-full rounded-md border ${errors.time ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-50'} px-3 py-2.5 pr-10 text-sm text-slate-700 outline-none focus:border-[#1976D2] focus:bg-white`}
-            value={notesData.time}
-            onChange={(e) => setNotesData({ ...notesData, time: e.target.value })}
-            placeholder="12:00 AM"
-          />
-          <span 
-            className="absolute inset-y-0 right-3 flex cursor-pointer items-center text-slate-400 hover:text-slate-600"
-            onClick={triggerTimePicker}
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </span>
-        </div>
-        {errors.time && <span className="mt-1 text-xs text-red-600">{errors.time}</span>}
-      </div>
+                {/* Notes Field */}
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-semibold text-slate-700">Notes</span>
+                  <textarea
+                    rows={4}
+                    className={`w-full rounded-md border ${errors.notes ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-50'} px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#1976D2] focus:bg-white`}
+                    value={notesData.notes}
+                    onChange={(e) => setNotesData({ ...notesData, notes: e.target.value })}
+                    placeholder="Enter curfew notes..."
+                  />
+                  {errors.notes && <span className="text-xs text-red-600">{errors.notes}</span>}
+                </label>
 
-      {/* Notes Field - Fixed: Consistent py-2.5 */}
-      <div>
-        <label className="mb-1.5 block text-xs font-semibold text-slate-700">Notes</label>
-        <textarea
-          rows={4}
-          className={`w-full rounded-md border ${errors.notes ? 'border-red-500 bg-red-50' : 'border-slate-300 bg-slate-50'} px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#1976D2] focus:bg-white`}
-          value={notesData.notes}
-          onChange={(e) => setNotesData({ ...notesData, notes: e.target.value })}
-          placeholder="Enter curfew notes..."
-        />
-        {errors.notes && <span className="mt-1 text-xs text-red-600">{errors.notes}</span>}
-      </div>
-    </div>
-
-    {/* Modal Buttons */}
-    <div className="mt-6 flex justify-end gap-3">
-      <button
-        type="button"
-        onClick={handleCloseModal}
-        className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        onClick={handleSubmitNotes}
-        className="rounded-md bg-gradient-to-r from-[#1a3a8a] to-[#1b9ad4] px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-      >
-        Add Notes
-      </button>
-    </div>
-  </div>
-</div>
+                {/* Modal Buttons */}
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="rounded-md border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-md bg-[#1976D2] px-6 py-2 text-sm font-semibold text-white shadow hover:bg-[#1565C0]"
+                  >
+                    Add Notes
+                  </button>
+                </div>
+              </form>
+            </ModalCard>
           )}
 
           {/* CURFEW FOLDERS: gradient header + list */}
@@ -304,51 +393,51 @@ function CurfewFoldersPage() {
                   key={folder.id}
                   className="flex items-center justify-between bg-white px-6 py-4 hover:bg-gray-50/80"
                 >
-                <div className="flex items-center gap-3">
-                  <img
-                    src="/src/assets/lagayan.svg"
-                    alt=""
-                    className="h-6 w-6 flex-shrink-0 text-blue-600"
-                  />
-                  <span className="font-medium text-slate-800">{folder.name}</span>
-                </div>
-                <div className="relative">
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                    onClick={() => setMenuOpen(menuOpen === folder.id ? null : folder.id)}
-                  >
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                    </svg>
-                  </button>
-                  {menuOpen === folder.id && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setMenuOpen(null)}
-                        aria-hidden
-                      />
-                      <div className="absolute right-0 top-full z-20 mt-1 flex flex-col gap-1 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-                        <button
-                          type="button"
-                          className="rounded-md px-3 py-1.5 text-left text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700"
-                          onClick={() => handleView(folder.id)}
-                        >
-                          View
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-md px-3 py-1.5 text-left text-xs font-semibold text-white bg-red-500 hover:bg-red-600"
-                          onClick={() => handleDelete(folder.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </li>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/src/assets/lagayan.svg"
+                      alt=""
+                      className="h-6 w-6 flex-shrink-0 text-blue-600"
+                    />
+                    <span className="font-medium text-slate-800">{folder.name}</span>
+                  </div>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="flex h-8 w-8 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                      onClick={() => setMenuOpen(menuOpen === folder.id ? null : folder.id)}
+                    >
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                      </svg>
+                    </button>
+                    {menuOpen === folder.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setMenuOpen(null)}
+                          aria-hidden
+                        />
+                        <div className="absolute right-0 top-full z-20 mt-1 flex flex-col gap-1 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                          <button
+                            type="button"
+                            className="rounded-md px-3 py-1.5 text-left text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700"
+                            onClick={() => handleView(folder.id)}
+                          >
+                            View
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md px-3 py-1.5 text-left text-xs font-semibold text-white bg-red-500 hover:bg-red-600"
+                            onClick={() => handleDelete(folder.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </li>
               ))}
             </ul>
           </div>

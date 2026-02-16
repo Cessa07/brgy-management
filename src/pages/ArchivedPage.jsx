@@ -1,7 +1,75 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../layout/DashboardLayout'
 import ModalCard from '../components/ModalCard'
+
+// Success Alert Component for Restore (green theme)
+const RestoreSuccessAlert = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-white">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-white/80 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Success Alert Component for Delete (red theme)
+const DeleteSuccessAlert = ({ message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0">
+          <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-white">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 text-white/80 hover:text-white"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const REPORT_TYPE_STYLES = {
   BLOTTER: 'bg-amber-400 text-slate-900',
@@ -23,6 +91,11 @@ function ArchivedPage() {
   const [selected, setSelected] = useState(null)
   const [mode, setMode] = useState(null)
   const [search, setSearch] = useState('')
+  // Success alert states
+  const [showRestoreAlert, setShowRestoreAlert] = useState(false)
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false)
+  const [restoredCase, setRestoredCase] = useState('')
+  const [deletedCase, setDeletedCase] = useState('')
 
   const totalCount = rows.length
 
@@ -37,17 +110,67 @@ function ArchivedPage() {
   }
 
   const handleRestore = () => {
+    if (!selected) return
+    setRestoredCase(`${selected.caseNo} - ${selected.name}`)
     closeModal()
+    // Show restore success alert
+    setShowRestoreAlert(true)
   }
 
   const handleDelete = () => {
     if (!selected) return
+    setDeletedCase(`${selected.caseNo} - ${selected.name}`)
     setRows(rows.filter((r) => r.id !== selected.id))
     closeModal()
+    // Show delete success alert
+    setShowDeleteAlert(true)
   }
+
+  // Filter rows based on search input
+  const filteredRows = rows.filter((row) => {
+    const searchLower = search.toLowerCase()
+    return (
+      row.caseNo.toLowerCase().includes(searchLower) ||
+      row.name.toLowerCase().includes(searchLower)
+    )
+  })
 
   return (
     <DashboardLayout active="archived">
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
+
+      {/* Restore Success Alert with green theme */}
+      {showRestoreAlert && (
+        <RestoreSuccessAlert 
+          message={`Case ${restoredCase} has been restored successfully`}
+          onClose={() => setShowRestoreAlert(false)}
+        />
+      )}
+
+      {/* Delete Success Alert with red theme */}
+      {showDeleteAlert && (
+        <DeleteSuccessAlert 
+          message={`Case ${deletedCase} has been permanently removed`}
+          onClose={() => setShowDeleteAlert(false)}
+        />
+      )}
+
       <div className="min-h-full bg-gray-100 pt-1">
         <section className="overflow-hidden rounded-2xl bg-white shadow-lg">
           {/* Blue gradient header: from top-left darker to bottom-right lighter */}
@@ -105,7 +228,7 @@ function ArchivedPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {filteredRows.map((row) => (
                   <tr
                     key={row.id}
                     className="border-b border-gray-100 bg-white hover:bg-gray-50/80"
